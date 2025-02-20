@@ -53,7 +53,7 @@ import { PieceIconList } from '@/features/pieces/components/piece-icon-list';
 import { useAuthorization } from '@/hooks/authorization-hooks';
 import { platformHooks } from '@/hooks/platform-hooks';
 import { authenticationSession } from '@/lib/authentication-session';
-import { formatUtils } from '@/lib/utils';
+import { formatUtils, NEW_FLOW_QUERY_PARAM } from '@/lib/utils';
 import { GitBranchType } from '@activepieces/ee-shared';
 import { FlowStatus, Permission, PopulatedFlow } from '@activepieces/shared';
 
@@ -100,7 +100,9 @@ const FlowsPage = () => {
     platform.environmentsEnabled,
   );
   const userHasPermissionToUpdateFlow = checkAccess(Permission.WRITE_FLOW);
-  const userHasPermissionToPushToGit = checkAccess(Permission.WRITE_GIT_REPO);
+  const userHasPermissionToPushToGit = checkAccess(
+    Permission.WRITE_PROJECT_RELEASE,
+  );
   const isDevelopmentBranch =
     gitSync && gitSync.branchType === GitBranchType.DEVELOPMENT;
 
@@ -134,9 +136,9 @@ const FlowsPage = () => {
     },
     onError: () => toast(INTERNAL_ERROR_TOAST),
   });
-
+  const projectId = authenticationSession.getProjectId()!;
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['flow-table', searchParams.toString()],
+    queryKey: ['flow-table', searchParams.toString(), projectId],
     staleTime: 0,
     queryFn: () => {
       const name = searchParams.get('name');
@@ -148,7 +150,7 @@ const FlowsPage = () => {
       const folderId = searchParams.get('folderId') ?? undefined;
 
       return flowsApi.list({
-        projectId: authenticationSession.getProjectId()!,
+        projectId,
         cursor: cursor ?? undefined,
         limit,
         name: name ?? undefined,
@@ -177,7 +179,7 @@ const FlowsPage = () => {
       return flow;
     },
     onSuccess: (flow) => {
-      navigate(`/flows/${flow.id}`);
+      navigate(`/flows/${flow.id}?${NEW_FLOW_QUERY_PARAM}=true`);
     },
     onError: () => toast(INTERNAL_ERROR_TOAST),
   });

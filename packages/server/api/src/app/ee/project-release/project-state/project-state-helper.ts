@@ -1,5 +1,4 @@
-import { ProjectSyncError } from '@activepieces/ee-shared'
-import { FlowOperationType, FlowState, flowStructureUtil, PopulatedFlow } from '@activepieces/shared'
+import { FlowOperationType, FlowState, FlowStatus, flowStructureUtil, PopulatedFlow, ProjectSyncError } from '@activepieces/shared'
 import { FastifyBaseLogger } from 'fastify'
 import { flowRepo } from '../../../flows/flow/flow.repo'
 import { flowService } from '../../../flows/flow/flow.service'
@@ -62,7 +61,7 @@ export const projectStateHelper = (log: FastifyBaseLogger) => ({
         })
     },
 
-    async republishFlow(flowId: string, projectId: string): Promise<ProjectSyncError | null> {
+    async republishFlow({ flowId, projectId, status }: RepublishFlowParams): Promise<ProjectSyncError | null> {
         const project = await projectService.getOneOrThrow(projectId)
         const flow = await flowService(log).getOnePopulated({ id: flowId, projectId })
         if (!flow) {
@@ -86,6 +85,13 @@ export const projectStateHelper = (log: FastifyBaseLogger) => ({
                     request: {},
                 },
             })
+
+            await flowService(log).updateStatus({
+                id: flowId,
+                projectId,
+                newStatus: status,
+            })
+
             return null
         }
         catch (e) {
@@ -104,3 +110,9 @@ export const projectStateHelper = (log: FastifyBaseLogger) => ({
         await flowService(log).delete({ id: flowId, projectId })
     },
 })
+
+type RepublishFlowParams = {
+    flowId: string
+    projectId: string
+    status: FlowStatus
+}

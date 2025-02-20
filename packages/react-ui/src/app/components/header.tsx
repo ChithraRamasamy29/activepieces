@@ -4,10 +4,11 @@ import { Link, useLocation } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/ui/user-avatar';
+import { PlatformSwitcher } from '@/features/platform-switcher/components/platform-switcher';
 import { ProjectSwitcher } from '@/features/projects/components/project-switcher';
 import { InviteUserDialog } from '@/features/team/component/invite-user-dialog';
 import { useShowPlatformAdminDashboard } from '@/hooks/authorization-hooks';
-import { authenticationSession } from '@/lib/authentication-session';
+import { userHooks } from '@/hooks/user-hooks';
 import { PlatformRole } from '@activepieces/shared';
 
 import { useEmbedding } from '../../components/embed-provider';
@@ -16,14 +17,13 @@ import { notificationHooks } from '../routes/platform/notifications/hooks/notifi
 import { PlatformDialog } from '../routes/platform/notifications/paltform-dialog';
 
 import UsageLimitsButton from './usage-limits-button';
-
 export const Header = () => {
   const history = useLocation();
   const isInPlatformAdmin = history.pathname.startsWith('/platform');
   const showPlatformAdminDashboard = useShowPlatformAdminDashboard();
   const { embedState } = useEmbedding();
   const messages = notificationHooks.useNotifications();
-  const platformRole = authenticationSession.getUserPlatformRole();
+  const platformRole = userHooks.getCurrentUserPlatformRole();
 
   return (
     !embedState.isEmbedded && (
@@ -35,7 +35,11 @@ export const Header = () => {
               {t('Platform Admin')}
             </span>
           ) : (
-            <ProjectSwitcher />
+            <>
+              <PlatformSwitcher />
+
+              <ProjectSwitcher />
+            </>
           )}
           <div className="grow"></div>
           <div className="flex items-center justify-center gap-4">

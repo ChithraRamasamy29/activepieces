@@ -4,6 +4,7 @@ import { FileTextIcon, LockKeyhole } from 'lucide-react';
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
+import { useEmbedding } from '@/components/embed-provider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Tooltip,
@@ -12,11 +13,11 @@ import {
 } from '@/components/ui/tooltip';
 import { useAuthorization } from '@/hooks/authorization-hooks';
 import { flagsHooks } from '@/hooks/flags-hooks';
+import { cn, determineDefaultRoute } from '@/lib/utils';
 import { ApFlagId, supportUrl } from '@activepieces/shared';
 
 import { ShowPoweredBy } from '../../components/show-powered-by';
 import { platformHooks } from '../../hooks/platform-hooks';
-import { determineDefaultRoute } from '../router/default-route';
 
 import { Header } from './header';
 
@@ -35,6 +36,7 @@ type CustomTooltipLinkProps = {
   notification?: boolean;
   locked?: boolean;
   newWindow?: boolean;
+  isActive?: (pathname: string) => boolean;
 };
 const CustomTooltipLink = ({
   to,
@@ -44,11 +46,12 @@ const CustomTooltipLink = ({
   notification,
   locked,
   newWindow,
+  isActive,
 }: CustomTooltipLinkProps) => {
   const location = useLocation();
 
-  const isActive = location.pathname.startsWith(to);
-
+  const isLinkActive =
+    location.pathname.startsWith(to) || isActive?.(location.pathname);
   return (
     <Link
       to={to}
@@ -66,7 +69,7 @@ const CustomTooltipLink = ({
         )}
         <Icon
           className={`size-10 p-2.5 hover:text-primary rounded-lg transition-colors ${
-            isActive ? 'bg-accent text-primary' : ''
+            isLinkActive ? 'bg-accent text-primary' : ''
           } ${extraClasses || ''}`}
         />
         <span className="text-[10px]">{label}</span>
@@ -86,6 +89,7 @@ export type SidebarLink = {
   locked?: boolean;
   hasPermission?: boolean;
   showInEmbed?: boolean;
+  isActive?: (pathname: string) => boolean;
 };
 
 type SidebarProps = {
@@ -104,6 +108,7 @@ export function Sidebar({
   const { data: showSupportAndDocs } = flagsHooks.useFlag<boolean>(
     ApFlagId.SHOW_COMMUNITY,
   );
+  const { embedState } = useEmbedding();
   const { platform } = platformHooks.useCurrentPlatform();
   const defaultRoute = determineDefaultRoute(useAuthorization().checkAccess);
   return (
@@ -138,6 +143,7 @@ export function Sidebar({
                     key={index}
                     notification={link.notification}
                     locked={link.locked}
+                    isActive={link.isActive}
                   />
                 ))}
 
@@ -165,7 +171,13 @@ export function Sidebar({
         <div className="flex-1 p-4">
           <div className="flex flex-col">
             <Header />
-            <div className="container mx-auto flex py-10">{children}</div>
+            <div
+              className={cn('container mx-auto flex py-10 px-2', {
+                'py-4': embedState.isEmbedded,
+              })}
+            >
+              {children}
+            </div>
           </div>
         </div>
       </div>

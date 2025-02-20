@@ -59,6 +59,13 @@ export const CopilotSettingsWithoutSensitiveData = Type.Object({
 })
 export type CopilotSettingsWithoutSensitiveData = Static<typeof CopilotSettingsWithoutSensitiveData>
 
+export const PlatformUsage = Type.Object({
+    tasks: Type.Number(),
+    aiCredits: Type.Number(),
+})
+
+export type PlatformUsage = Static<typeof PlatformUsage>
+
 export const Platform = Type.Object({
     ...BaseModelSchema,
     ownerId: ApId,
@@ -75,7 +82,7 @@ export const Platform = Type.Object({
     * @deprecated Use projects filter instead.
     */
     filteredPieceBehavior: Type.Enum(FilteredPieceBehavior),
-    smtp: Type.Optional(SMTPInformation),
+    smtp: Nullable(SMTPInformation),
     cloudAuthEnabled: Type.Boolean(),
     environmentsEnabled: Type.Boolean(),
     analyticsEnabled: Type.Boolean(),
@@ -111,7 +118,7 @@ export const PlatformWithoutSensitiveData = Type.Composite([Type.Object({
     federatedAuthProviders: FederatedAuthnProviderConfigWithoutSensitiveData,
     defaultLocale: Nullable(Type.String()),
     copilotSettings: Type.Optional(CopilotSettingsWithoutSensitiveData),
-    smtp: Type.Optional(Type.Object({})),
+    smtp: Nullable(Type.Object({})),
 }), Type.Pick(Platform, [
     'id',
     'created',
